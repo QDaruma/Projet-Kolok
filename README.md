@@ -158,3 +158,4 @@ Par ordre de rapport utilité / effort :
 | Tout s'affiche mais rien ne se synchronise | Clé `anon` au lieu de `publishable` | Voir l'avertissement du § 3 |
 | « Page illisible automatiquement » | Le site bloque les robots | Remplir les champs à la main |
 | Rien ne s'affiche après le push | Pages pas encore déployé | Attendre 1-2 min, puis recharger avec `Ctrl+F5` |
+| Après un push, l'ancienne version persiste | GitHub Pages met en cache les fichiers JS 10 min (`max-age=600`) | `Ctrl+F5`, ou attendre — vérifié : ça arrive vraiment |
