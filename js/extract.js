@@ -84,6 +84,10 @@ function preferTitleFigures(out) {
   if (!out.title) return;
   const t = sniffNumbers(out.title);
   if (t.surface != null) out.surface = t.surface;
+  // Idem pour la ville : le corps de page contient pieds de page, agences et
+  // autres villes — SeLoger renvoyait « MILANO (20124) » pour une annonce
+  // marseillaise. Le titre, lui, situe l'annonce affichée.
+  if (t.city) out.city = t.city;
 }
 
 // ── Parsing du HTML brut (fallback allorigins) ───────────────
