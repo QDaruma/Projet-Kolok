@@ -261,15 +261,41 @@ function renderCompare(rows) {
 // ── Détail ───────────────────────────────────────────────────
 window.__open = (id) => { state.detailId = id; renderDetail(id); $('#detail').classList.remove('hidden'); };
 
+// Champs de saisie libre de la fiche, à protéger des rafraîchissements.
+const DRAFT_FIELDS = ['myComment', 'sharedNotes'];
+let renderedDrafts = {};   // valeurs telles qu'affichées au dernier rendu
+
+/**
+ * Reconstruit la fiche détaillée. Elle est re-rendue à CHAQUE changement de
+ * données — y compris ceux d'un colocataire en temps réel — donc on relève
+ * d'abord ce que l'utilisateur est en train de taper pour le lui rendre
+ * ensuite. Sans ça, noter un logement effaçait le commentaire en cours.
+ */
 function renderDetail(id) {
   const r = Store.listings.find(x => x.id === id);
   if (!r) { closeModals(); return; }
+
+  const host = $('#detailCard');
+  const sameListing = host.dataset.listing === id;
+  const active = document.activeElement;
+  const drafts = {};
+  if (sameListing) {
+    for (const key of DRAFT_FIELDS) {
+      const el = host.querySelector('#' + key);
+      // « Modifié » = différent de ce qu'on avait affiché, donc tapé par l'utilisateur.
+      if (el && el.value !== renderedDrafts[key]) {
+        drafts[key] = { value: el.value, focused: el === active,
+                        start: el.selectionStart, end: el.selectionEnd };
+      }
+    }
+  }
+  const scroll = sameListing ? host.querySelector('.modal-body')?.scrollTop || 0 : 0;
   const st = statusById(r.status);
   const me = state.me;
   const perM2 = (r.price && r.surface) ? Math.round(r.price / r.surface) : null;
   const share = USERS.length && r.price ? Math.round(r.price / USERS.length) : null;
 
-  $('#detailCard').innerHTML = `
+  host.innerHTML = `
     <header class="modal-head">
       <h2>${esc(r.title || 'Sans titre')}</h2>
       <button class="icon-btn" data-close>✕</button>
@@ -354,8 +380,23 @@ function renderDetail(id) {
       <button class="btn btn-primary" data-close>Fermer</button>
     </footer>`;
 
+  // Restauration de la saisie en cours, du curseur et du défilement.
+  host.dataset.listing = id;
+  renderedDrafts = {};
+  for (const key of DRAFT_FIELDS) {
+    const el = host.querySelector('#' + key);
+    if (el) renderedDrafts[key] = el.value;
+  }
+  for (const [key, d] of Object.entries(drafts)) {
+    const el = host.querySelector('#' + key);
+    if (!el) continue;
+    el.value = d.value;
+    if (d.focused) { el.focus(); el.setSelectionRange(d.start, d.end); }
+  }
+  if (scroll) host.querySelector('.modal-body').scrollTop = scroll;
+
   // Interactions du détail
-  const card = $('#detailCard');
+  const card = host;
   card.querySelectorAll('[data-setstatus]').forEach(b => b.onclick = () =>
     Store.patchListing(id, { status: b.dataset.setstatus }));
   card.querySelectorAll('[data-field]').forEach(el => el.onchange = () =>
@@ -453,6 +494,10 @@ async function deleteCurrent() {
 function closeModals() {
   $('#editModal').classList.add('hidden');
   $('#detail').classList.add('hidden');
+  // Repartir d'une fiche neuve à la prochaine ouverture : on ne veut pas
+  // ressusciter un brouillon abandonné.
+  $('#detailCard').dataset.listing = '';
+  renderedDrafts = {};
   state.detailId = null;
 }
 

@@ -3,7 +3,7 @@
 //    • MODE LOCAL   : localStorage (aucune config, données perso)
 //    • MODE PARTAGÉ : Supabase + temps réel (dès que config.js est rempli)
 // ─────────────────────────────────────────────────────────────
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
 const LS_KEY = 'kolok.data.v1';
 const uid = () => (crypto.randomUUID ? crypto.randomUUID()
@@ -22,10 +22,10 @@ export const Store = {
 
   // ── Initialisation ────────────────────────────────────────
   async init() {
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+    if (SUPABASE_URL && SUPABASE_KEY) {
       try {
         const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-        this.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        this.sb = createClient(SUPABASE_URL, SUPABASE_KEY);
         await this._pull();
         this._listenRealtime();
         this.mode = 'cloud';
@@ -126,30 +126,50 @@ export const Store = {
     this._emit();
   },
 
-  /** Raccourci utilisé par les boutons rapides des cartes. */
+  /**
+   * Modification partielle (boutons de statut, date de visite, notes).
+   * N'envoie que les champs touchés, pour la même raison que saveOpinion :
+   * deux modifications rapprochées ne doivent pas s'écraser.
+   */
   async patchListing(id, patch) {
     const cur = this.listings.find(x => x.id === id);
     if (!cur) return;
-    return this.saveListing({ ...cur, ...patch });
+    const row = { id, ...patch, updated_at: now() };
+    if ('contacted_by' in patch) {
+      row.contacted_at = patch.contacted_by ? (cur.contacted_at || now()) : null;
+    }
+    if (this.sb) {
+      const { error } = await this.sb.from('listings').update(row).eq('id', id);
+      if (error) throw error;
+      await this._pull();
+    } else {
+      Object.assign(cur, row);
+      this._writeLocal();
+    }
+    this._emit();
   },
 
   // ── Écritures : avis ──────────────────────────────────────
+  /**
+   * N'écrit QUE les champs réellement fournis. Sans ça, noter puis
+   * commenter coup sur coup faisait disparaître la note : le second
+   * enregistrement reconstruisait la ligne entière à partir de l'état
+   * local, pas encore rafraîchi par le premier.
+   */
   async saveOpinion({ listing_id, user_id, score, comment }) {
-    const prev = this.getOpinion(listing_id, user_id);
-    const row = {
-      id: prev?.id || uid(),
-      listing_id, user_id,
-      score:   score   ?? prev?.score   ?? null,
-      comment: comment ?? prev?.comment ?? '',
-      updated_at: now(),
-    };
+    const patch = { listing_id, user_id, updated_at: now() };
+    if (score   !== undefined) patch.score   = score;
+    if (comment !== undefined) patch.comment = comment;
+
     if (this.sb) {
-      const { error } = await this.sb.from('opinions').upsert(row, { onConflict: 'listing_id,user_id' });
+      const { error } = await this.sb.from('opinions')
+        .upsert(patch, { onConflict: 'listing_id,user_id' });
       if (error) throw error;
       await this._pull();
     } else {
       const i = this.opinions.findIndex(o => o.listing_id === listing_id && o.user_id === user_id);
-      if (i >= 0) this.opinions[i] = row; else this.opinions.push(row);
+      if (i >= 0) this.opinions[i] = { ...this.opinions[i], ...patch };
+      else this.opinions.push({ score: null, comment: '', ...patch });
       this._writeLocal();
     }
     this._emit();

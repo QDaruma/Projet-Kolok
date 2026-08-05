@@ -51,32 +51,29 @@ Le site est en ligne ~1 minute plus tard sur
 
 ---
 
-## 3. Passer en mode partagé (important) — 5 minutes
+## 3. Mode partagé temps réel
 
-Par défaut l'app tourne en **mode local** : les données restent dans le navigateur de chacun,
-donc vous ne voyez pas les logements des autres. Pour partager en temps réel :
+✅ **C'est déjà fait, rien à faire.** Le projet Supabase `Projet-Kolok` est créé, le schéma
+appliqué, et les clés sont dans [`js/config.js`](js/config.js). La pastille en haut à droite
+affiche `☁️ partagé` : les trois écrans se synchronisent instantanément, sans rechargement.
 
-1. Créer un compte gratuit sur <https://supabase.com> → **New project** (choisir la région Europe).
-2. Dans le menu de gauche : **SQL Editor** → **New query** → coller tout le contenu de
-   [`supabase/schema.sql`](supabase/schema.sql) → **Run**.
-3. Menu **Settings → API**, copier :
-   - `Project URL`
-   - la clé `anon` `public`
-4. Ouvrir [`js/config.js`](js/config.js) et remplir :
-   ```js
-   export const SUPABASE_URL = 'https://xxxxx.supabase.co';
-   export const SUPABASE_ANON_KEY = 'eyJhbGci...';
-   ```
-5. `git add . && git commit -m "Config Supabase" && git push`
+### Si vous devez un jour refaire la configuration
 
-La pastille en haut à droite passe de `💾 local` à `☁️ partagé`. Les trois écrans se
-synchronisent alors instantanément.
+1. Sur <https://supabase.com> → **New project** (région Europe).
+2. **SQL Editor** → **New query** → coller [`supabase/schema.sql`](supabase/schema.sql) → **Run**.
+   *(Le script est rejouable : le relancer ne casse rien.)*
+3. **Settings → API Keys** → copier `Project URL` et la clé **`sb_publishable_…`**.
+4. Les reporter dans [`js/config.js`](js/config.js), puis `git commit` + `git push`.
 
-> **Sur la clé `anon`** : elle est publique par conception et le schéma autorise la lecture/écriture
-> pour le groupe. La protection ici, c'est que l'URL du site n'est pas diffusée. Pour un outil
-> à 3 personnes qui liste des annonces déjà publiques, c'est le bon compromis. Si vous voulez
-> verrouiller : activez l'auth Supabase (magic link) et remplacez `to anon` par `to authenticated`
-> dans les policies du schéma.
+> ⚠️ **Prenez bien la clé `publishable`, pas l'ancienne clé `anon` JWT.** Vérifié le 06/08/2026
+> sur ce projet : avec la clé `anon`, la lecture et l'écriture fonctionnent mais **aucun événement
+> temps réel n'arrive** — les écrans cessent silencieusement de se synchroniser entre eux.
+
+> **Sur la sécurité** : cette clé est publique par conception et le schéma autorise la
+> lecture/écriture pour le groupe. La protection ici, c'est que l'URL du site n'est pas diffusée.
+> Pour un outil à 3 personnes qui liste des annonces déjà publiques, c'est le bon compromis.
+> Pour verrouiller davantage : activer l'auth Supabase (magic link) et remplacer `to anon` par
+> `to authenticated` dans les policies du schéma.
 
 ---
 
@@ -157,6 +154,7 @@ Par ordre de rapport utilité / effort :
 | Symptôme | Cause | Solution |
 |---|---|---|
 | Page blanche en ouvrant `index.html` | Ouvert en `file://` | Lancer `python -m http.server 8000` |
-| Les autres ne voient pas mes logements | Mode local | Faire l'étape 3 (Supabase) |
+| Les autres ne voient pas mes logements | La pastille affiche `💾 local` | Vérifier que `js/config.js` contient bien les 2 clés |
+| Tout s'affiche mais rien ne se synchronise | Clé `anon` au lieu de `publishable` | Voir l'avertissement du § 3 |
 | « Page illisible automatiquement » | Le site bloque les robots | Remplir les champs à la main |
 | Rien ne s'affiche après le push | Pages pas encore déployé | Attendre 1-2 min, puis recharger avec `Ctrl+F5` |

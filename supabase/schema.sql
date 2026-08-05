@@ -22,14 +22,17 @@ create table if not exists listings (
   updated_at   timestamptz default now()
 );
 
+-- Un avis est identifié par (logement, personne) : c'est la clé primaire.
+-- Pas de colonne « id » séparée — elle obligerait à réécrire la ligne
+-- entière à chaque modification, ce qui fait qu'un commentaire
+-- enregistré juste après une note écrasait la note.
 create table if not exists opinions (
-  id         text primary key,
   listing_id text not null references listings(id) on delete cascade,
   user_id    text not null,
   score      int,
   comment    text default '',
   updated_at timestamptz default now(),
-  unique (listing_id, user_id)          -- un avis par personne et par logement
+  primary key (listing_id, user_id)
 );
 
 create index if not exists opinions_listing_idx on opinions(listing_id);
@@ -51,5 +54,16 @@ create policy "acces_groupe_opinions" on opinions
 
 -- ── Temps réel ─────────────────────────────────────────────
 -- Pour que les 3 écrans se mettent à jour tout seuls.
-alter publication supabase_realtime add table listings;
-alter publication supabase_realtime add table opinions;
+-- Le test « if not exists » rend ce script rejouable : sans lui,
+-- le relancer échoue avec « already member of publication ».
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and tablename = 'listings') then
+    alter publication supabase_realtime add table listings;
+  end if;
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and tablename = 'opinions') then
+    alter publication supabase_realtime add table opinions;
+  end if;
+end $$;

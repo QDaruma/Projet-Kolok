@@ -9,11 +9,16 @@ export const USERS = [
   { id: 'batto',  name: 'Batto',  emoji: '🦇', color: '#c084fc' },
 ];
 
-// 2) Supabase — laissez vide pour rester en MODE LOCAL (données sur votre
-//    machine uniquement). Remplissez pour passer en MODE PARTAGÉ temps réel.
-//    Voir README.md § "Passer en mode partagé" (5 minutes).
-export const SUPABASE_URL = '';
-export const SUPABASE_ANON_KEY = '';
+// 2) Supabase — mode PARTAGÉ temps réel. Videz ces deux lignes pour
+//    revenir au mode local (données sur votre machine uniquement).
+//
+//    ⚠️ Utilisez bien la clé « publishable » (sb_publishable_…) et PAS
+//    l'ancienne clé « anon » JWT : vérifié le 06/08/2026, l'ancienne lit
+//    et écrit correctement mais ne reçoit AUCUN événement temps réel —
+//    les écrans ne se synchronisent alors plus entre eux.
+//    Cette clé est publique par conception, elle a sa place dans le dépôt.
+export const SUPABASE_URL = 'https://rqgbxbfbskealrtbhjfg.supabase.co';
+export const SUPABASE_KEY = 'sb_publishable_g_wjq-E07f8wdJjbY6ltYA_131zDpD2';
 
 // 3) Statuts du pipeline de recherche. L'ordre = l'ordre d'affichage.
 export const STATUSES = [
