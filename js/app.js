@@ -273,7 +273,7 @@ function cardHTML(r) {
         <span class="voters">${voters}</span>
         ${flag}
         ${r.url ? `<a class="link-out" href="${esc(r.url)}" target="_blank" rel="noopener"
-           title="Ouvrir l’annonce" aria-label="Ouvrir l’annonce">${icon('link')}</a>` : ''}
+           title="Ouvrir l’annonce dans un nouvel onglet">${icon('link')}<span>Annonce</span></a>` : ''}
       </div>
     </div>
   </article>`;

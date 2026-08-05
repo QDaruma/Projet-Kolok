@@ -285,9 +285,12 @@ main { padding-top: 22px; padding-bottom: 72px; }
 .card-flag { font-size: 11.5px; color: var(--ink-3); display: inline-flex; align-items: center; gap: 4px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-flag .i { width: 13px; height: 13px; }
-.link-out { margin-left: auto; display: grid; place-items: center; width: 26px; height: 26px;
-  border-radius: var(--r-sm); color: var(--ink-3); flex: none; }
-.link-out:hover { background: var(--surface-2); color: var(--ink); }
+/* Une icône seule ne se voyait pas : le lien porte son libellé. */
+.link-out { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; flex: none;
+  padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--ink-2); font-size: 11.5px; font-weight: 600; text-decoration: none; }
+.link-out .i { width: 13px; height: 13px; }
+.link-out:hover { border-color: var(--ink-3); color: var(--ink); background: var(--surface-2); }
 
 /* ── État vide ───────────────────────────────────────────── */
 .empty { padding: 54px 20px; text-align: center; border: 1px dashed var(--line); border-radius: var(--r-lg);
