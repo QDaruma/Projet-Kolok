@@ -104,6 +104,13 @@ function wireEvents() {
   });
   $('#btnFetch').addEventListener('click', doFetch);
   $('#fLessorType').addEventListener('change', syncLessorField);
+  // Le store applique la règle de toute façon ; on la montre ici pour que le
+  // formulaire n'affiche pas un statut différent de ce qui sera enregistré.
+  $('#fContactedBy').addEventListener('change', () => {
+    if ($('#fContactedBy').value && $('#fStatus').value === 'a_contacter') {
+      $('#fStatus').value = 'contacte';
+    }
+  });
   $('#fPrice').addEventListener('input', showPriceHint);
   $('#fPriceMode').addEventListener('change', showPriceHint);
   $('#fUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doFetch(); } });

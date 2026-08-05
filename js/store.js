@@ -100,6 +100,9 @@ export const Store = {
     // Horodatage automatique du premier contact.
     if (row.contacted_by && !row.contacted_at) row.contacted_at = now();
     if (!row.contacted_by) row.contacted_at = null;
+    // Nommer quelqu'un, c'est dire que l'annonce a été contactée : la fiche
+    // ne peut plus rester « à contacter ». Les étapes suivantes ne bougent pas.
+    if (row.contacted_by && row.status === 'a_contacter') row.status = 'contacte';
 
     if (this.sb) {
       const { error } = await this.sb.from('listings').upsert(row);
@@ -139,6 +142,11 @@ export const Store = {
     const row = { id, ...patch, updated_at: now() };
     if ('contacted_by' in patch) {
       row.contacted_at = patch.contacted_by ? (cur.contacted_at || now()) : null;
+      // Même règle que ci-dessus. On ne touche pas au statut s'il est déjà
+      // plus avancé, ni s'il est modifié dans le même geste.
+      if (patch.contacted_by && !('status' in patch) && cur.status === 'a_contacter') {
+        row.status = 'contacte';
+      }
     }
     // Repasser en « particulier » ne doit pas laisser traîner un nom d'agence.
     if ('lessor_type' in patch && patch.lessor_type !== 'agence') row.lessor_name = '';
