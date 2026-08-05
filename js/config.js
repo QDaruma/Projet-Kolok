@@ -40,6 +40,14 @@ export const RATINGS = [
   { score: 1, label: 'Non',          color: '#C0483F' },
 ];
 
+// 5) Qui loue : utile pour savoir à qui on parle et repérer les agences
+//    qu'on a déjà au téléphone.
+export const LESSORS = [
+  { id: 'particulier', label: 'Particulier', icon: 'person' },
+  { id: 'agence',      label: 'Agence',      icon: 'building' },
+];
+
+export const lessorById    = id => LESSORS.find(l => l.id === id) || null;
 export const statusById    = id => STATUSES.find(s => s.id === id) || STATUSES[0];
 export const userById      = id => USERS.find(u => u.id === id) || null;
 export const ratingByScore = s  => RATINGS.find(r => r.score === s) || null;

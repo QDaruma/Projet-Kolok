@@ -15,6 +15,8 @@ create table if not exists listings (
   status       text default 'a_contacter',
   notes        text default '',
   added_by     text default '',
+  lessor_type  text default '',          -- '' | 'particulier' | 'agence'
+  lessor_name  text default '',          -- nom de l'agence, si agence
   contacted_by text default '',
   contacted_at timestamptz,
   visit_at     date,
@@ -36,6 +38,11 @@ create table if not exists opinions (
 );
 
 create index if not exists opinions_listing_idx on opinions(listing_id);
+
+-- Ajouts postérieurs à la création initiale : « if not exists » garde le
+-- script rejouable sur une base déjà en service.
+alter table listings add column if not exists lessor_type text default '';
+alter table listings add column if not exists lessor_name text default '';
 
 -- ── Sécurité ───────────────────────────────────────────────
 -- Outil privé à 3 personnes : on autorise la clé « anon » à lire et

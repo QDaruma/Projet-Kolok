@@ -28,6 +28,8 @@
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><path d="M4 20V5.5A1.5 1.5 0 0 1 5.5 4h8A1.5 1.5 0 0 1 15 5.5V20"/><path d="M15 10h3.5A1.5 1.5 0 0 1 20 11.5V20M2.5 20h19M7.5 8h4M7.5 12h4M7.5 16h4"/></symbol>
   <symbol id="i-wand" viewBox="0 0 24 24"><path d="M5 19L15.5 8.5M17 4l.9 2.1L20 7l-2.1.9L17 10l-.9-2.1L14 7l2.1-.9zM7.5 4l.6 1.4 1.4.6-1.4.6L7.5 8l-.6-1.4L5.5 6l1.4-.6z"/></symbol>
 </svg>
 
@@ -163,6 +165,17 @@
         <div class="field"><label for="fCity">Ville ou quartier</label>
           <input id="fCity" type="text" placeholder="Lyon 4e"></div>
         <div class="field"><label for="fStatus">Étape</label><select id="fStatus"></select></div>
+      </div>
+
+      <div class="row-2">
+        <div class="field"><label for="fLessorType">Qui loue&nbsp;?</label>
+          <select id="fLessorType">
+            <option value="">Non précisé</option>
+            <option value="particulier">Particulier</option>
+            <option value="agence">Agence</option>
+          </select></div>
+        <div class="field" id="lessorNameField"><label for="fLessorName">Nom de l’agence</label>
+          <input id="fLessorName" type="text" placeholder="Foncia, Century 21…" autocomplete="off"></div>
       </div>
 
       <div class="row-2">

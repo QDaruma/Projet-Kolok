@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 //  APP — rendu et interactions.
 // ─────────────────────────────────────────────────────────────
-import { USERS, STATUSES, RATINGS, statusById, userById, ratingByScore } from './config.js';
+import { USERS, STATUSES, RATINGS, LESSORS, statusById, userById, ratingByScore, lessorById } from './config.js';
 import { Store } from './store.js';
 import { extractFromUrl, normalizeUrl } from './extract.js';
 
@@ -103,6 +103,7 @@ function wireEvents() {
     window.__open(el.dataset.id);
   });
   $('#btnFetch').addEventListener('click', doFetch);
+  $('#fLessorType').addEventListener('change', syncLessorField);
   $('#fPrice').addEventListener('input', showPriceHint);
   $('#fPriceMode').addEventListener('change', showPriceHint);
   $('#fUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doFetch(); } });
@@ -161,7 +162,7 @@ function visibleListings() {
   if (state.statuses.size) rows = rows.filter(r => state.statuses.has(r.status));
   if (state.maxPrice) rows = rows.filter(r => r.price == null || r.price <= state.maxPrice);
   if (state.q) {
-    rows = rows.filter(r => [r.title, r.city, r.notes, r.url,
+    rows = rows.filter(r => [r.title, r.city, r.notes, r.url, r.lessor_name,
       ...Store.opinionsFor(r.id).map(o => o.comment)].join(' ').toLowerCase().includes(state.q));
   }
   return sortRows(rows);
@@ -246,6 +247,10 @@ function cardHTML(r) {
       title="${esc(tip)}">${u.initial}${o?.comment ? '<i class="said"></i>' : ''}</span>`;
   }).join('');
 
+  const lsr = lessorById(r.lessor_type);
+  const lsrLabel = lsr && r.lessor_type === 'agence' && r.lessor_name ? r.lessor_name
+                 : lsr ? lsr.label : '';
+
   const flag = r.visit_at
     ? `<span class="card-flag">${icon('calendar')}Visite le ${dateFR(r.visit_at)}</span>`
     : r.contacted_by
@@ -268,6 +273,7 @@ function cardHTML(r) {
         ${r.surface ? `<li>${icon('area')}${fmt(r.surface)} m²</li>` : ''}
         ${r.rooms   ? `<li>${icon('bed')}${r.rooms} ch.</li>` : ''}
         ${r.city    ? `<li>${icon('pin')}<span class="truncate">${esc(r.city)}</span></li>` : ''}
+        ${lsr ? `<li>${icon(lsr.icon)}<span class="truncate">${esc(lsrLabel)}</span></li>` : ''}
       </ul>
       <div class="card-foot">
         <span class="voters">${voters}</span>
@@ -282,7 +288,7 @@ function cardHTML(r) {
 // ── Tableau comparatif ───────────────────────────────────────
 function renderCompare(rows) {
   if (!rows.length) { $('#compare').innerHTML = ''; return; }
-  const head = ['Logement', 'Loyer', '€/m²', 'Par pers.', 'Surface', 'Ch.', 'Ville', 'Étape',
+  const head = ['Logement', 'Loyer', '€/m²', 'Par pers.', 'Surface', 'Ch.', 'Ville', 'Bailleur', 'Étape',
     ...USERS.map(u => u.name), 'Moy.'];
   $('#compare').innerHTML = `<div class="table-wrap"><table class="cmp">
     <thead><tr>${head.map((h, i) => `<th class="${i && i < 7 || h === 'Moy.' || USERS.some(u => u.name === h) ? 'n' : ''}">${esc(h)}</th>`).join('')}</tr></thead>
@@ -299,6 +305,8 @@ function renderCompare(rows) {
         <td class="n">${r.surface ? fmt(r.surface) : '—'}</td>
         <td class="n">${r.rooms || '—'}</td>
         <td>${esc(r.city || '—')}</td>
+        <td>${(() => { const l = lessorById(r.lessor_type); return l
+          ? esc(l.id === 'agence' && r.lessor_name ? r.lessor_name : l.label) : '—'; })()}</td>
         <td><span class="stage-tag" style="--c:${st.color}"><span class="dot"></span>${esc(st.short)}</span></td>
         ${USERS.map(u => {
           const o = Store.getOpinion(r.id, u.id);
@@ -314,7 +322,7 @@ function renderCompare(rows) {
 // ── Fiche détaillée ──────────────────────────────────────────
 window.__open = (id) => { state.detailId = id; renderDetail(id); $('#detail').classList.remove('hidden'); };
 
-const DRAFT_FIELDS = ['myComment', 'sharedNotes'];
+const DRAFT_FIELDS = ['myComment', 'sharedNotes', 'lessorName'];
 let renderedDrafts = {};
 
 /**
@@ -382,6 +390,16 @@ function renderDetail(id) {
           <label>Date de visite
             <input type="date" data-field="visit_at" value="${(r.visit_at || '').slice(0, 10)}">
           </label>
+          <label>Qui loue
+            <select data-field="lessor_type">
+              <option value="">Non précisé</option>
+              ${LESSORS.map(l => `<option value="${l.id}" ${r.lessor_type === l.id ? 'selected' : ''}>${esc(l.label)}</option>`).join('')}
+            </select>
+          </label>
+          ${r.lessor_type === 'agence' ? `<label>Nom de l’agence
+            <input id="lessorName" type="text" data-field="lessor_name" placeholder="Foncia, Century 21…"
+                   value="${esc(r.lessor_name || '')}">
+          </label>` : ''}
         </div>
         ${r.contacted_at ? `<p class="note">Premier contact le ${dateFR(r.contacted_at)}.</p>` : ''}
       </section>
@@ -481,6 +499,9 @@ function openEditor(id) {
   $('#fNotes').value    = r?.notes || '';
   // En base le loyer est TOUJOURS le total du logement : à l'ouverture on
   // repart donc de « pour tout le logement ».
+  $('#fLessorType').value = r?.lessor_type || '';
+  $('#fLessorName').value = r?.lessor_name || '';
+  syncLessorField();
   $('#fPriceMode').value = 'total';
   showPriceHint();
   $('#editModal').classList.remove('hidden');
@@ -492,6 +513,11 @@ function openEditor(id) {
  * d'une chambre. On lève l'ambiguïté en montrant les deux montants avant
  * d'enregistrer.
  */
+/** Le nom n'a de sens que pour une agence. */
+function syncLessorField() {
+  $('#lessorNameField').classList.toggle('hidden', $('#fLessorType').value !== 'agence');
+}
+
 function showPriceHint() {
   const v = parseFloat($('#fPrice').value);
   const h = $('#priceHint');
@@ -549,6 +575,8 @@ async function saveFromForm() {
       image_url: $('#fImage').value.trim(),
       notes: $('#fNotes').value,
       added_by: cur?.added_by || state.me || '',
+      lessor_type: $('#fLessorType').value,
+      lessor_name: $('#fLessorName').value.trim(),
     });
     closeModals();
     toast(isNew ? 'Logement ajouté' : 'Modifications enregistrées');

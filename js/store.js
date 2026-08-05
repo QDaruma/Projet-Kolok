@@ -89,6 +89,8 @@ export const Store = {
       status:       data.status       || 'a_contacter',
       notes:        data.notes        || '',
       added_by:     data.added_by     || '',
+      lessor_type:  data.lessor_type  || '',
+      lessor_name:  data.lessor_type === 'agence' ? (data.lessor_name || '') : '',
       contacted_by: data.contacted_by || '',
       contacted_at: data.contacted_at || null,
       visit_at:     data.visit_at     || null,
@@ -138,6 +140,8 @@ export const Store = {
     if ('contacted_by' in patch) {
       row.contacted_at = patch.contacted_by ? (cur.contacted_at || now()) : null;
     }
+    // Repasser en « particulier » ne doit pas laisser traîner un nom d'agence.
+    if ('lessor_type' in patch && patch.lessor_type !== 'agence') row.lessor_name = '';
     if (this.sb) {
       const { error } = await this.sb.from('listings').update(row).eq('id', id);
       if (error) throw error;
