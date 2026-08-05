@@ -3,163 +3,184 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e1117">
+<meta name="theme-color" content="#f2f3f5">
 <title>Kolok — notre recherche de coloc</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23141922'/><path d='M8 17.5 16 10l8 7.5V24H8z' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linejoin='round'/></svg>">
 <link rel="stylesheet" href="assets/style.css">
+<!-- Applique le thème choisi avant le premier rendu, pour éviter un flash. -->
+<script>try{var t=localStorage.getItem('kolok.theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 </head>
 <body>
 
-<!-- ══════════ ÉCRAN "QUI ES-TU ?" ══════════ -->
-<div id="whoami" class="who hidden">
-  <div class="who-box">
-    <div class="who-logo">🏠</div>
-    <h1>Kolok</h1>
-    <p>Qui es-tu&nbsp;?</p>
-    <div id="whoBtns" class="who-btns"></div>
+<!-- ═══════ Jeu d'icônes (trait 1.5, bouts arrondis) ═══════ -->
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M14 5h5v5"/><path d="M19 5l-7.5 7.5"/><path d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>
+  <symbol id="i-area" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 9.5h4.5V4M20 14.5h-4.5V20"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 14.5h18M7.5 9V7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v2"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s6.5-6.1 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 14.9 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v4M16 3.5v4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 4h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5L16 13l4 1.5v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.5 6.2 2 2 0 0 1 6.5 4z"/></symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="5" rx="1.5"/><rect x="3.5" y="12" width="17" height="8" rx="1.5"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M9.5 9.5V20M15 9.5V20"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="M5 19L15.5 8.5M17 4l.9 2.1L20 7l-2.1.9L17 10l-.9-2.1L14 7l2.1-.9zM7.5 4l.6 1.4 1.4.6-1.4.6L7.5 8l-.6-1.4L5.5 6l1.4-.6z"/></symbol>
+</svg>
+
+<!-- ═══════ Choix de l'utilisateur ═══════ -->
+<div id="whoami" class="gate hidden">
+  <div class="gate-card">
+    <div class="gate-mark">kolok</div>
+    <h1>Notre recherche de coloc</h1>
+    <p>Qui utilise cet appareil&nbsp;?</p>
+    <div id="whoBtns" class="gate-list"></div>
   </div>
 </div>
 
-<!-- ══════════ HEADER ══════════ -->
+<!-- ═══════ Barre supérieure ═══════ -->
 <header class="topbar">
-  <div class="topbar-in">
-    <div class="brand">🏠 <span>Kolok</span></div>
+  <div class="wrap topbar-in">
+    <a class="mark" href="#" aria-label="Kolok, accueil">kolok</a>
 
     <label class="search">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="search" type="search" placeholder="Rechercher (ville, titre, note…)" autocomplete="off">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="search" type="search" placeholder="Rechercher une ville, un titre, un avis…" autocomplete="off">
+      <kbd>/</kbd>
     </label>
 
-    <div class="topbar-right">
-      <button id="btnAdd" class="btn btn-primary">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        <span>Ajouter</span>
+    <div class="topbar-actions">
+      <button id="btnTheme" class="icon-btn" title="Changer de thème" aria-label="Changer de thème">
+        <svg class="i i-light"><use href="#i-sun"/></svg><svg class="i i-dark"><use href="#i-moon"/></svg>
+      </button>
+      <button id="btnAdd" class="btn btn-solid">
+        <svg class="i"><use href="#i-plus"/></svg><span>Ajouter</span>
       </button>
       <button id="btnMe" class="me" title="Changer d'utilisateur"></button>
     </div>
   </div>
-
-  <!-- Barre de filtres -->
-  <div class="filters">
-    <div class="chips" id="statusChips"></div>
-    <div class="filters-right">
-      <label class="mini">
-        Max <input id="maxPrice" type="number" min="0" step="50" placeholder="€" inputmode="numeric">
-      </label>
-      <select id="sort" class="mini-select">
-        <option value="recent">Plus récents</option>
-        <option value="price_asc">Prix ↑</option>
-        <option value="price_desc">Prix ↓</option>
-        <option value="score">Mieux notés</option>
-        <option value="surface">Surface ↓</option>
-      </select>
-      <button id="btnCompare" class="mini-btn" title="Vue comparatif">⇄ Comparer</button>
-    </div>
-  </div>
 </header>
 
-<!-- ══════════ STATS ══════════ -->
-<div class="stats" id="stats"></div>
+<!-- ═══════ Résumé + pipeline (la carte du dossier) ═══════ -->
+<div class="board-head">
+  <div class="wrap">
+    <p id="stats" class="summary"></p>
 
-<!-- ══════════ CONTENU ══════════ -->
-<main id="main">
-  <div id="grid" class="grid"></div>
-  <div id="empty" class="empty hidden">
-    <div class="empty-emoji">🗂️</div>
-    <h2>Aucun logement ici</h2>
-    <p>Colle une annonce (Leboncoin, SeLoger, PAP, Facebook…) et elle se remplit toute seule.</p>
-    <button class="btn btn-primary" onclick="document.getElementById('btnAdd').click()">Ajouter le premier logement</button>
+    <div class="pipeline-row">
+      <div id="statusChips" class="pipeline" role="tablist" aria-label="Étapes de la recherche"></div>
+
+      <div class="controls">
+        <label class="ctrl">
+          <span>Loyer max</span>
+          <input id="maxPrice" type="number" min="0" step="50" placeholder="—" inputmode="numeric">
+        </label>
+        <label class="ctrl">
+          <span>Trier</span>
+          <select id="sort">
+            <option value="recent">Ajout récent</option>
+            <option value="price_asc">Loyer croissant</option>
+            <option value="price_desc">Loyer décroissant</option>
+            <option value="score">Avis du groupe</option>
+            <option value="surface">Surface</option>
+          </select>
+        </label>
+        <div class="seg" role="group" aria-label="Affichage">
+          <button id="btnBoard" class="seg-btn is-on" title="Par étape">
+            <svg class="i"><use href="#i-stack"/></svg><span>Étapes</span>
+          </button>
+          <button id="btnCompare" class="seg-btn" title="Tableau comparatif">
+            <svg class="i"><use href="#i-table"/></svg><span>Tableau</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div id="compare" class="compare hidden"></div>
+</div>
+
+<!-- ═══════ Contenu ═══════ -->
+<main class="wrap">
+  <div id="grid"></div>
+  <div id="compare" class="hidden"></div>
+
+  <div id="empty" class="empty hidden">
+    <h2>Rien à cette étape</h2>
+    <p>Collez le lien d'une annonce n'importe où sur la page&nbsp;: les informations se remplissent toutes seules.</p>
+    <button class="btn btn-solid" data-open-add>
+      <svg class="i"><use href="#i-plus"/></svg><span>Ajouter un logement</span>
+    </button>
+  </div>
 </main>
 
-<!-- ══════════ MODALE : AJOUT / ÉDITION ══════════ -->
+<!-- ═══════ Formulaire ═══════ -->
 <div id="editModal" class="modal hidden">
-  <div class="modal-card">
-    <header class="modal-head">
+  <div class="sheet">
+    <header class="sheet-head">
       <h2 id="editTitle">Nouveau logement</h2>
-      <button class="icon-btn" data-close>✕</button>
+      <button class="icon-btn" data-close aria-label="Fermer"><svg class="i"><use href="#i-close"/></svg></button>
     </header>
 
-    <div class="modal-body">
+    <div class="sheet-body">
       <div class="field">
         <label for="fUrl">Lien de l'annonce</label>
-        <div class="url-row">
-          <input id="fUrl" type="url" placeholder="https://www.leboncoin.fr/…" autocomplete="off">
-          <button id="btnFetch" class="btn btn-ghost">✨ Remplir</button>
+        <div class="inline">
+          <input id="fUrl" type="url" placeholder="https://www.seloger.com/…" autocomplete="off">
+          <button id="btnFetch" class="btn btn-outline">
+            <svg class="i"><use href="#i-wand"/></svg><span>Remplir</span>
+          </button>
         </div>
-        <small id="fetchMsg" class="hint"></small>
+        <small id="fetchMsg" class="note"></small>
       </div>
 
       <div class="field">
         <label for="fTitle">Titre</label>
-        <input id="fTitle" type="text" placeholder="T3 lumineux — Croix-Rousse">
+        <input id="fTitle" type="text" placeholder="T3 lumineux, Croix-Rousse">
       </div>
 
       <div class="row-3">
-        <div class="field">
-          <label for="fPrice">Loyer /mois (€)</label>
-          <input id="fPrice" type="number" min="0" inputmode="numeric" placeholder="1200">
-        </div>
-        <div class="field">
-          <label for="fSurface">Surface (m²)</label>
-          <input id="fSurface" type="number" min="0" inputmode="numeric" placeholder="75">
-        </div>
-        <div class="field">
-          <label for="fRooms">Chambres</label>
-          <input id="fRooms" type="number" min="0" inputmode="numeric" placeholder="3">
-        </div>
+        <div class="field"><label for="fPrice">Loyer / mois</label>
+          <input id="fPrice" type="number" min="0" inputmode="numeric" placeholder="1200"></div>
+        <div class="field"><label for="fSurface">Surface m²</label>
+          <input id="fSurface" type="number" min="0" inputmode="numeric" placeholder="75"></div>
+        <div class="field"><label for="fRooms">Chambres</label>
+          <input id="fRooms" type="number" min="0" inputmode="numeric" placeholder="3"></div>
       </div>
 
       <div class="row-2">
-        <div class="field">
-          <label for="fCity">Ville / quartier</label>
-          <input id="fCity" type="text" placeholder="Lyon 4e">
-        </div>
-        <div class="field">
-          <label for="fStatus">Statut</label>
-          <select id="fStatus"></select>
-        </div>
+        <div class="field"><label for="fCity">Ville ou quartier</label>
+          <input id="fCity" type="text" placeholder="Lyon 4e"></div>
+        <div class="field"><label for="fStatus">Étape</label><select id="fStatus"></select></div>
       </div>
 
       <div class="row-2">
-        <div class="field">
-          <label for="fContactedBy">Contacté par</label>
-          <select id="fContactedBy"></select>
-        </div>
-        <div class="field">
-          <label for="fVisitAt">Date de visite</label>
-          <input id="fVisitAt" type="date">
-        </div>
+        <div class="field"><label for="fContactedBy">Contacté par</label><select id="fContactedBy"></select></div>
+        <div class="field"><label for="fVisitAt">Date de visite</label><input id="fVisitAt" type="date"></div>
       </div>
 
-      <div class="field">
-        <label for="fImage">Image (URL, optionnel)</label>
-        <input id="fImage" type="url" placeholder="https://…jpg">
-      </div>
+      <div class="field"><label for="fImage">Photo (lien, facultatif)</label>
+        <input id="fImage" type="url" placeholder="https://…jpg"></div>
 
-      <div class="field">
-        <label for="fNotes">Notes communes</label>
-        <textarea id="fNotes" rows="3" placeholder="Infos utiles : charges, dispo, contact de l'agence…"></textarea>
-      </div>
+      <div class="field"><label for="fNotes">Notes partagées</label>
+        <textarea id="fNotes" rows="3" placeholder="Charges, disponibilité, contact de l'agence…"></textarea></div>
     </div>
 
-    <footer class="modal-foot">
-      <button id="btnDelete" class="btn btn-danger hidden">Supprimer</button>
-      <div class="spacer"></div>
-      <button class="btn btn-ghost" data-close>Annuler</button>
-      <button id="btnSave" class="btn btn-primary">Enregistrer</button>
+    <footer class="sheet-foot">
+      <button id="btnDelete" class="btn btn-quiet danger hidden">Supprimer</button>
+      <span class="grow"></span>
+      <button class="btn btn-quiet" data-close>Annuler</button>
+      <button id="btnSave" class="btn btn-solid">Enregistrer</button>
     </footer>
   </div>
 </div>
 
-<!-- ══════════ PANNEAU : DÉTAIL ══════════ -->
+<!-- ═══════ Fiche détaillée ═══════ -->
 <div id="detail" class="modal hidden">
-  <div class="modal-card modal-card-lg" id="detailCard"></div>
+  <div class="sheet sheet-wide" id="detailCard"></div>
 </div>
 
-<!-- ══════════ TOAST ══════════ -->
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast" role="status"></div>
 
 <script type="module" src="js/app.js"></script>
 </body>

@@ -64,10 +64,26 @@ export function parseText(body) {
   if (title) out.title = cleanTitle(title[1]);
 
   const img = body.match(/!\[[^\]]*\]\((https?:\/\/[^\s)]+\.(?:jpe?g|png|webp)[^\s)]*)\)/i);
-  if (img) out.image_url = img[1];
+  if (img && !/logo|favicon|sprite|placeholder/i.test(img[1])) out.image_url = img[1];
 
   Object.assign(out, sniffNumbers(body));
+  preferTitleFigures(out);
   return out;
+}
+
+/**
+ * Le corps d'une page d'annonce contient souvent les biens « similaires »,
+ * dont les surfaces polluent la détection. Le titre ne décrit que l'annonce
+ * affichée : sa surface prime.
+ *
+ * La surface seulement : dans un titre, « 4 pièces » ou « T3 » compte les
+ * pièces totales, alors que le « 3 chambres » du corps compte les chambres —
+ * et c'est le nombre de chambres qui nous intéresse pour une colocation.
+ */
+function preferTitleFigures(out) {
+  if (!out.title) return;
+  const t = sniffNumbers(out.title);
+  if (t.surface != null) out.surface = t.surface;
 }
 
 // ── Parsing du HTML brut (fallback allorigins) ───────────────
@@ -80,7 +96,7 @@ export function parseHtml(html) {
   };
   out.title = cleanTitle(meta('og:title') || (html.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1] || '');
   const im = meta('og:image');
-  if (im) out.image_url = im;
+  if (im && !/logo|favicon|sprite|placeholder/i.test(im)) out.image_url = im;
 
   const text = html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -88,6 +104,7 @@ export function parseHtml(html) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;|&#160;/g, ' ');
   Object.assign(out, sniffNumbers(text + ' ' + (meta('og:description') || '')));
+  preferTitleFigures(out);
   return out;
 }
 

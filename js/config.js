@@ -2,11 +2,11 @@
 //  CONFIG — le seul fichier que vous aurez besoin de modifier
 // ─────────────────────────────────────────────────────────────
 
-// 1) Les colocataires. Ajoutez / renommez librement.
+// 1) Les colocataires. « initial » sert de pastille dans l'interface.
 export const USERS = [
-  { id: 'daruma', name: 'Daruma', emoji: '🐼', color: '#5b8cff' },
-  { id: 'hugoat', name: 'Hugoat', emoji: '🐐', color: '#22c58b' },
-  { id: 'batto',  name: 'Batto',  emoji: '🦇', color: '#c084fc' },
+  { id: 'daruma', name: 'Daruma', initial: 'D', color: '#B5532E' },
+  { id: 'hugoat', name: 'Hugoat', initial: 'H', color: '#2C7A7B' },
+  { id: 'batto',  name: 'Batto',  initial: 'B', color: '#6B4EA8' },
 ];
 
 // 2) Supabase — mode PARTAGÉ temps réel. Videz ces deux lignes pour
@@ -20,24 +20,26 @@ export const USERS = [
 export const SUPABASE_URL = 'https://rqgbxbfbskealrtbhjfg.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_g_wjq-E07f8wdJjbY6ltYA_131zDpD2';
 
-// 3) Statuts du pipeline de recherche. L'ordre = l'ordre d'affichage.
+// 3) Les étapes de la recherche, dans l'ordre. La couleur est le seul
+//    système coloré de l'interface : elle doit rester lisible sur fond
+//    clair comme sur fond sombre.
 export const STATUSES = [
-  { id: 'a_contacter', label: 'À contacter', short: 'À faire',   color: '#94a3b8' },
-  { id: 'contacte',    label: 'Contacté',    short: 'Contacté',  color: '#5b8cff' },
-  { id: 'attente',     label: 'En attente',  short: 'Attente',   color: '#f0b429' },
-  { id: 'visite',      label: 'Visité',      short: 'Visité',    color: '#c084fc' },
-  { id: 'valide',      label: 'Validé',      short: 'Validé',    color: '#22c58b' },
-  { id: 'refuse',      label: 'Refusé',      short: 'Refusé',    color: '#f4577b' },
+  { id: 'a_contacter', label: 'À contacter', short: 'À contacter', color: '#7C8598' },
+  { id: 'contacte',    label: 'Contacté',    short: 'Contacté',    color: '#3D6FD6' },
+  { id: 'attente',     label: 'En attente',  short: 'En attente',  color: '#A8761C' },
+  { id: 'visite',      label: 'Visité',      short: 'Visité',      color: '#7C51C4' },
+  { id: 'valide',      label: 'Validé',      short: 'Validé',      color: '#1E8A5C' },
+  { id: 'refuse',      label: 'Refusé',      short: 'Refusé',      color: '#C0483F' },
 ];
 
-// 4) Échelle d'avis (score stocké de 1 à 4).
+// 4) Échelle d'avis : une vraie gradation vert → rouge, sans emoji.
 export const RATINGS = [
-  { score: 4, emoji: '😍', label: 'Coup de cœur', color: '#22c58b' },
-  { score: 3, emoji: '🙂', label: 'Ça me va',     color: '#8fd14f' },
-  { score: 2, emoji: '😐', label: 'Bof',          color: '#f0b429' },
-  { score: 1, emoji: '🚫', label: 'Non merci',    color: '#f4577b' },
+  { score: 4, label: 'Coup de cœur', color: '#1E8A5C' },
+  { score: 3, label: 'Ça me va',     color: '#6E9440' },
+  { score: 2, label: 'Bof',          color: '#A8761C' },
+  { score: 1, label: 'Non',          color: '#C0483F' },
 ];
 
-export const statusById = id => STATUSES.find(s => s.id === id) || STATUSES[0];
-export const userById   = id => USERS.find(u => u.id === id) || null;
-export const ratingByScore = s => RATINGS.find(r => r.score === s) || null;
+export const statusById    = id => STATUSES.find(s => s.id === id) || STATUSES[0];
+export const userById      = id => USERS.find(u => u.id === id) || null;
+export const ratingByScore = s  => RATINGS.find(r => r.score === s) || null;
