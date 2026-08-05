@@ -139,9 +139,20 @@
         <input id="fTitle" type="text" placeholder="T3 lumineux, Croix-Rousse">
       </div>
 
-      <div class="row-3">
-        <div class="field"><label for="fPrice">Loyer / mois</label>
-          <input id="fPrice" type="number" min="0" inputmode="numeric" placeholder="1200"></div>
+      <div class="field">
+        <div class="row-2">
+          <div class="field"><label for="fPrice">Loyer / mois</label>
+            <input id="fPrice" type="number" min="0" inputmode="numeric" placeholder="1200"></div>
+          <div class="field"><label for="fPriceMode">Ce montant est…</label>
+            <select id="fPriceMode">
+              <option value="total">pour tout le logement</option>
+              <option value="person">par personne</option>
+            </select></div>
+        </div>
+        <small id="priceHint" class="note"></small>
+      </div>
+
+      <div class="row-2">
         <div class="field"><label for="fSurface">Surface m²</label>
           <input id="fSurface" type="number" min="0" inputmode="numeric" placeholder="75"></div>
         <div class="field"><label for="fRooms">Chambres</label>

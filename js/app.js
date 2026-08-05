@@ -103,6 +103,8 @@ function wireEvents() {
     window.__open(el.dataset.id);
   });
   $('#btnFetch').addEventListener('click', doFetch);
+  $('#fPrice').addEventListener('input', showPriceHint);
+  $('#fPriceMode').addEventListener('change', showPriceHint);
   $('#fUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doFetch(); } });
   $('#btnSave').addEventListener('click', saveFromForm);
   $('#btnDelete').addEventListener('click', deleteCurrent);
@@ -477,8 +479,28 @@ function openEditor(id) {
   $('#fVisitAt').value  = (r?.visit_at || '').slice(0, 10);
   $('#fImage').value    = r?.image_url || '';
   $('#fNotes').value    = r?.notes || '';
+  // En base le loyer est TOUJOURS le total du logement : à l'ouverture on
+  // repart donc de « pour tout le logement ».
+  $('#fPriceMode').value = 'total';
+  showPriceHint();
   $('#editModal').classList.remove('hidden');
   setTimeout(() => $(r ? '#fTitle' : '#fUrl').focus(), 50);
+}
+
+/**
+ * Certains sites affichent le loyer du logement entier, d'autres le prix
+ * d'une chambre. On lève l'ambiguïté en montrant les deux montants avant
+ * d'enregistrer.
+ */
+function showPriceHint() {
+  const v = parseFloat($('#fPrice').value);
+  const h = $('#priceHint');
+  if (!Number.isFinite(v) || v <= 0) { h.textContent = ''; h.className = 'note'; return; }
+  const perPerson = $('#fPriceMode').value === 'person';
+  const total = perPerson ? v * USERS.length : v;
+  h.textContent = `${fmt(total)} € au total, soit ${fmt(Math.round(total / USERS.length))} € `
+                + `par personne à ${USERS.length}.`;
+  h.className = 'note ok';
 }
 
 async function doFetch() {
@@ -504,6 +526,12 @@ async function doFetch() {
   } finally { $('#btnFetch').disabled = false; }
 }
 
+function priceAsTotal() {
+  const v = parseFloat($('#fPrice').value);
+  if (!Number.isFinite(v)) return '';
+  return $('#fPriceMode').value === 'person' ? v * USERS.length : v;
+}
+
 async function saveFromForm() {
   const cur = state.editingId ? Store.listings.find(x => x.id === state.editingId) : null;
   try {
@@ -512,7 +540,8 @@ async function saveFromForm() {
       id: state.editingId || undefined,
       url: normalizeUrl($('#fUrl').value),
       title: $('#fTitle').value.trim() || 'Sans titre',
-      price: $('#fPrice').value, surface: $('#fSurface').value, rooms: $('#fRooms').value,
+      // Toujours stocker le loyer du logement entier.
+      price: priceAsTotal(), surface: $('#fSurface').value, rooms: $('#fRooms').value,
       city: $('#fCity').value.trim(),
       status: $('#fStatus').value,
       contacted_by: $('#fContactedBy').value,
