@@ -41,13 +41,42 @@ export const RATINGS = [
 ];
 
 // 5) Qui loue : utile pour savoir à qui on parle et repérer les agences
-//    qu'on a déjà au téléphone.
+//    qu'on a déjà eues au téléphone.
 export const LESSORS = [
   { id: 'particulier', label: 'Particulier', icon: 'person' },
   { id: 'agence',      label: 'Agence',      icon: 'building' },
+];
+
+// 6) Nos critères de recherche. Ils étaient jusqu'ici raisonnés à la main
+//    dans les notes : les voici filtrables.
+export const CRITERIA = {
+  // Le quartier visé. Une fiche dont la ville ne le mentionne pas est
+  // signalée « hors secteur » — sans être cachée, on veut pouvoir comparer.
+  quartier: 'Sainte-Marguerite',
+  // Combien de chambres il nous faut, libres en même temps.
+  roomsNeeded: 3,
+};
+
+// 7) Une chambre annoncée n'est pas une chambre vue. Une annonce à
+//    « 3 chambres » s'est révélée n'en avoir que 2 : la distinction mérite
+//    d'être portée par la donnée, pas par une note en majuscules.
+export const ROOM_CHECKS = [
+  { id: '',         label: 'Annoncé, pas vérifié', short: 'annoncé',  color: '#A8761C' },
+  { id: 'confirme', label: 'Vérifié',              short: 'vérifié',  color: '#1E8A5C' },
+  { id: 'faux',     label: 'Annonce démentie',     short: 'démenti',  color: '#C0483F' },
 ];
 
 export const lessorById    = id => LESSORS.find(l => l.id === id) || null;
 export const statusById    = id => STATUSES.find(s => s.id === id) || STATUSES[0];
 export const userById      = id => USERS.find(u => u.id === id) || null;
 export const ratingByScore = s  => RATINGS.find(r => r.score === s) || null;
+export const roomCheckById = id => ROOM_CHECKS.find(c => c.id === (id || '')) || ROOM_CHECKS[0];
+
+/** Vrai si la fiche est dans le quartier qu'on vise. */
+export const inTargetArea = city =>
+  normalize(city).includes(normalize(CRITERIA.quartier));
+
+/** Sans accents ni tirets : « Sainte-Marguerite » = « sainte marguerite ». */
+const normalize = s => String(s || '').toLowerCase()
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^a-z0-9]+/g, ' ').trim();

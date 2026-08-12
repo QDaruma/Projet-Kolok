@@ -129,13 +129,15 @@ function sniffNumbers(text) {
     .filter(n => n >= 8 && n <= 500);
   if (surf.length) out.surface = Math.max(...surf);
 
-  // Chambres (prioritaire) sinon pièces.
+  // Chambres. Le champ visé compte les CHAMBRES, pas les pièces : un T3
+  // annonce 3 pièces principales, donc 2 chambres et un séjour. Reporter
+  // « T3 » tel quel donnait « 3 chambres » pour un logement qui en a deux.
   const ch = t.match(/(\d{1,2})\s*chambres?/i);
   const pi = t.match(/(\d{1,2})\s*(?:pièces?|pieces?)/i) || t.match(/\bT(\d)\b/i);
-  const rooms = ch ? +ch[1] : (pi ? +pi[1] : null);
+  const rooms = ch ? +ch[1] : (pi ? +pi[1] - 1 : null);
   if (rooms && rooms > 0 && rooms < 15) out.rooms = rooms;
 
-  // Ville : « 69004 Lyon 4e » ou « Lyon (69004) ».
+  // Ville : « 13009 Marseille 9e » ou « Marseille (13009) ».
   const c1 = t.match(/\b(\d{5})\s+([A-ZÀ-Ÿ][\wÀ-ÿ'’ -]{2,40})/);
   const c2 = t.match(/([A-ZÀ-Ÿ][\wÀ-ÿ'’ -]{2,40})\s*\(?\b(\d{5})\b\)?/);
   const city = (c1 && cleanCity(c1[2], c1[1])) || (c2 && cleanCity(c2[1], c2[2])) || null;

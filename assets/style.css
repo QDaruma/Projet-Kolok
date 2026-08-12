@@ -24,7 +24,11 @@
   --line-soft: #EBEDF1;
   --ink:       #171B22;
   --ink-2:     #4C5462;
-  --ink-3:     #7B8391;
+  /* --ink-3 porte TOUS les libellés de formulaire, en 10,5 px capitales.
+     L'ancienne valeur #7B8391 donnait 3,8:1 sur blanc — sous le seuil AA de
+     4,5:1, et illisible sur un téléphone en plein soleil. #646C7A donne 5,3:1
+     en restant visuellement discret. */
+  --ink-3:     #646C7A;
   --solid:     #171B22;
   --solid-ink: #FFFFFF;
   --focus:     #3D6FD6;
@@ -69,7 +73,7 @@
 :root[data-theme="light"] {
   --paper: #F2F3F5; --surface: #FFFFFF; --surface-2: #F7F8FA;
   --line: #DEE1E7; --line-soft: #EBEDF1;
-  --ink: #171B22; --ink-2: #4C5462; --ink-3: #7B8391;
+  --ink: #171B22; --ink-2: #4C5462; --ink-3: #646C7A;
   --solid: #171B22; --solid-ink: #FFFFFF; --focus: #3D6FD6;
   --shadow: 0 1px 2px rgba(16,20,28,.05), 0 8px 24px -12px rgba(16,20,28,.18);
   --shadow-up: 0 -1px 0 var(--line), 0 -18px 40px -20px rgba(16,20,28,.25);
@@ -91,6 +95,13 @@ a { color: inherit; }
 .grow { flex: 1; }
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
 @media (max-width: 640px) { .wrap { padding: 0 14px; } }
+/* Le fond ne doit pas défiler sous un panneau ouvert. */
+body.no-scroll { overflow: hidden; }
+/* Lisible par un lecteur d'écran, invisible à l'œil. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 
 .sprite { display: none; }
 .i { width: 17px; height: 17px; flex: none; fill: none; stroke: currentColor;
@@ -254,13 +265,13 @@ main { padding-top: 22px; padding-bottom: 72px; }
 /* Seul le loyer, information principale, porte la chasse fixe.
    Les chiffres secondaires restent dans la fonte de texte pour ne pas
    concurrencer le prix. */
+/* Le chiffre mis en avant est la part de CHACUN : c'est celui qui décide.
+   Le total du logement passe en second, il ne sert qu'à vérifier. */
 .card-price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .card-price b { font: 500 19px/1 var(--f-num); letter-spacing: -.035em; }
 .per, .perm2 { font-size: 11.5px; font-variant-numeric: tabular-nums; }
-/* Le montant par personne est le chiffre de decision : plus lisible. */
 .per { color: var(--ink-2); font-weight: 600; }
-.perm2 { color: var(--ink-3); }
-.perm2 { margin-left: auto; }
+.perm2 { color: var(--ink-3); margin-left: auto; }
 
 .card-title { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -299,21 +310,34 @@ main { padding-top: 22px; padding-bottom: 72px; }
 .empty p { color: var(--ink-2); max-width: 40ch; margin: 0 auto 18px; }
 
 /* ── Tableau comparatif ──────────────────────────────────── */
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
-.cmp { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 780px; }
+/* overflow-x seul force overflow-y à « auto » : le conteneur devenait la zone
+   de défilement du sticky, et comme il ne défile jamais verticalement,
+   l'en-tête partait avec la page. Une hauteur max le rend enfin collant. */
+.table-wrap { overflow: auto; max-height: 72vh; border: 1px solid var(--line);
+  border-radius: var(--r); background: var(--surface); }
+.cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 900px; }
 .cmp th, .cmp td { padding: 10px 13px; text-align: left; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
-.cmp thead th { position: sticky; top: 0; background: var(--surface-2); color: var(--ink-3);
+.cmp thead th { position: sticky; top: 0; z-index: 3; background: var(--surface-2); color: var(--ink-3);
   font: 600 10.5px/1 var(--f-body); letter-spacing: .07em; text-transform: uppercase; }
 .cmp tbody tr { cursor: pointer; }
 .cmp tbody tr:hover { background: var(--surface-2); }
-.cmp tbody tr:last-child td { border-bottom: 0; }
+.cmp tbody tr:hover .cmp-name { background: var(--surface-2); }
+.cmp tbody tr:last-child td, .cmp tbody tr:last-child th { border-bottom: 0; }
 .cmp .n { text-align: right; }
-.cmp-name { font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+/* Sans colonne figée, à 380 px on faisait défiler jusqu'à « Moyenne » sans
+   plus savoir de quel logement il s'agissait. */
+.cmp-name { position: sticky; left: 0; z-index: 2; background: var(--surface);
+  font-weight: 600; text-align: left; max-width: 220px; overflow: hidden;
+  text-overflow: ellipsis; box-shadow: 1px 0 0 var(--line-soft); }
+.cmp thead th:first-child { z-index: 4; background: var(--surface-2); box-shadow: 1px 0 0 var(--line-soft); }
 .cmp .stage-tag { display: inline-flex; align-items: center; gap: 6px; }
 .cmp .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
-.cmp .vote { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--r-color);
-  border: 1.5px solid var(--r-color); }
-.cmp .vote.none { background: none; border-color: var(--line); border-style: dashed; }
+/* Le score chiffré dans la pastille : la couleur seule excluait les
+   daltoniens et n'était lisible par personne au doigt. */
+.cmp .vote { display: inline-grid; place-items: center; width: 19px; height: 19px;
+  border-radius: 50%; font: 600 10px/1 var(--f-num); color: #fff;
+  background: color-mix(in srgb, var(--r-color) 80%, #1A1A1A); }
+.cmp .vote.none { background: none; color: var(--ink-3); border: 1.5px dashed var(--line); }
 
 /* ── Panneaux ────────────────────────────────────────────── */
 .modal { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: center; align-items: flex-end;
@@ -330,8 +354,12 @@ main { padding-top: 22px; padding-bottom: 72px; }
 @keyframes rise { from { transform: translateY(18px); opacity: 0; } }
 @media (min-width: 720px) { .sheet { border-radius: var(--r-lg); } }
 .sheet-head { display: flex; align-items: center; gap: 10px; padding: 14px 14px 14px 18px; border-bottom: 1px solid var(--line); }
-.sheet-head h2 { font-size: 16px; flex: 1; line-height: 1.35; }
-.sheet-body { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+/* Un titre extrait fait jusqu'à 120 caractères : sans limite, l'en-tête
+   prenait cinq lignes et écrasait le corps du panneau. */
+.sheet-head h2 { font-size: 16px; flex: 1; line-height: 1.35; min-width: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sheet-body { padding: 18px; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 16px; }
 /* Sans ça, les enfants (flex-shrink: 1 par défaut) sont écrasés dès que le
    contenu dépasse la hauteur du panneau : la bande de chiffres tombait à 2 px.
    On veut que le panneau défile, pas que son contenu se comprime. */
@@ -394,7 +422,9 @@ main { padding-top: 22px; padding-bottom: 72px; }
 .op .badge-initial { width: 24px; height: 24px; font-size: 11px; grid-area: a; }
 .op-name { font-weight: 600; font-size: 13px; grid-area: n; justify-self: start; }
 .op-score { font-size: 12px; color: var(--r-color, var(--ink-3)); grid-area: s; }
-.op-text { grid-area: t; font-size: 13px; color: var(--ink-2); white-space: pre-wrap; }
+/* Un lien collé dans un commentaire débordait de sa boîte. */
+.op-text { grid-area: t; font-size: 13px; color: var(--ink-2); white-space: pre-wrap;
+  overflow-wrap: anywhere; min-width: 0; }
 .op.empty { opacity: .6; }
 
 /* ── Toast ───────────────────────────────────────────────── */
@@ -404,17 +434,96 @@ main { padding-top: 22px; padding-bottom: 72px; }
   box-shadow: var(--shadow); transition: transform .24s cubic-bezier(.2,.9,.3,1); }
 .toast.show { transform: translate(-50%, 0); }
 
+/* ── Nouveautés depuis la dernière visite ────────────────── */
+.news { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 12px; padding: 9px 12px; font-size: 13px;
+  border: 1px solid color-mix(in srgb, var(--focus) 32%, transparent);
+  border-radius: var(--r); background: color-mix(in srgb, var(--focus) 7%, var(--surface)); }
+.news-text { flex: 1; min-width: 180px; color: var(--ink); }
+.news-text b { font-family: var(--f-num); font-weight: 500; }
+.news-mark { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--focus); }
+.news .btn { padding: 5px 10px; font-size: 12.5px; }
+
+/* La pastille sur la carte concernée : même repère visuel que la ligne
+   de résumé, pour qu'on fasse le lien sans y penser. */
+.card { position: relative; }
+.card.is-new { border-color: color-mix(in srgb, var(--focus) 45%, var(--line)); }
+.news-dot { position: absolute; top: 8px; right: 8px; z-index: 1;
+  width: 9px; height: 9px; border-radius: 50%; background: var(--focus);
+  box-shadow: 0 0 0 3px var(--surface); }
+
+/* ── Bandeau d'alerte ────────────────────────────────────── */
+.banner { background: color-mix(in srgb, #C0483F 12%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, #C0483F 35%, transparent); }
+.banner-in { display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 13px; }
+.banner-in span { flex: 1; }
+
+/* ── Squelette de chargement ─────────────────────────────── */
+@keyframes pulse { 50% { opacity: .45; } }
+.skeleton { display: grid; gap: 10px; }
+.sk-card { height: 118px; border-radius: var(--r); background: var(--surface);
+  border: 1px solid var(--line); animation: pulse 1.4s ease-in-out infinite; }
+.sk-line { display: inline-block; width: 240px; height: 12px; border-radius: 4px;
+  background: var(--line-soft); animation: pulse 1.4s ease-in-out infinite; }
+
+/* ── Étiquettes de critère ───────────────────────────────── */
+.card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--ink-2); background: var(--surface-2); }
+.tag-ok   { color: color-mix(in srgb, #1E8A5C 80%, var(--ink));
+            border-color: color-mix(in srgb, #1E8A5C 40%, transparent); }
+.tag-warn { color: color-mix(in srgb, #A8761C 80%, var(--ink));
+            border-color: color-mix(in srgb, #A8761C 40%, transparent); }
+.chk { font: 600 10px/1 var(--f-num); padding: 2px 4px; border-radius: 4px; margin-left: 3px; }
+.chk-todo     { color: color-mix(in srgb, #A8761C 80%, var(--ink)); }
+.chk-confirme { color: color-mix(in srgb, #1E8A5C 80%, var(--ink)); }
+.chk-faux     { color: color-mix(in srgb, #C0483F 80%, var(--ink)); }
+.criteria { display: flex; gap: 6px; }
+.off-area { color: color-mix(in srgb, #A8761C 80%, var(--ink)); }
+.votes { font-size: 10px; color: var(--ink-3); }
+
+/* Blanc sur couleur d'étape : les teintes claires tombaient à 3,7:1.
+   Le mélange vers le noir les fait passer AA dans les deux thèmes. */
+.pip.is-on { background: color-mix(in srgb, var(--c) 80%, #1A1A1A);
+             border-color: color-mix(in srgb, var(--c) 80%, #1A1A1A); }
+/* Les mêmes couleurs employées comme TEXTE : on les rapproche de l'encre,
+   ce qui les assombrit en thème clair et les éclaircit en thème sombre. */
+.op-score, .rate-btn.is-on { color: color-mix(in srgb, var(--c, var(--r-color)) 78%, var(--ink)); }
+.op-score { color: color-mix(in srgb, var(--r-color, var(--ink-3)) 78%, var(--ink)); }
+
 /* ── Petits écrans ───────────────────────────────────────── */
 @media (max-width: 860px) {
   .controls { width: 100%; margin-left: 0; }
   .seg { margin-left: auto; }
+}
+/* Deux colonnes dans un panneau de 344 px donnaient des champs de 166 px :
+   « Pour les chambres qu'on prend » y était tronqué net, or c'est le
+   sélecteur qui multiplie le loyer par trois. */
+@media (max-width: 560px) {
+  .row-2, .track, .row-3 { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   #btnAdd span { display: none; }
   #btnAdd { padding: 8px 10px; }
   .search kbd { display: none; }
   .seg-btn span { display: none; }
-  .ctrl input { width: 70px; }
+  .ctrl input { width: 76px; }
   .card { grid-template-columns: 78px 1fr; }
   .card-media { min-height: 108px; }
+  /* Sept puces à 90 px dans 352 px : trois étapes sur six étaient hors champ,
+     sans barre de défilement ni indice qu'il y avait une suite. */
+  .pipeline { flex-wrap: wrap; overflow-x: visible; }
+  /* Cibles tactiles : rien n'atteignait 44 px, à commencer par le filtre
+     principal et le lien vers l'annonce. */
+  .btn, .chip, .pip, .rate-btn, .seg-btn, .gate-btn { min-height: 44px; }
+  .icon-btn, .me { width: 44px; height: 44px; }
+  .link-out { position: relative; }
+  .link-out::after { content: ''; position: absolute; inset: -9px; }
+}
+
+/* iOS : viewport-fit=cover est déclaré mais aucune marge de sécurité ne
+   l'accompagnait — le pied du panneau passait sous la barre d'accueil. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .sheet-foot { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
 }

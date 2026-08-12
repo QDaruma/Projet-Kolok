@@ -40,6 +40,7 @@
     <h1>Notre recherche de coloc</h1>
     <p>Qui utilise cet appareil&nbsp;?</p>
     <div id="whoBtns" class="gate-list"></div>
+    <button id="gateCancel" class="btn btn-quiet hidden">Annuler</button>
   </div>
 </div>
 
@@ -49,35 +50,66 @@
     <a class="mark" href="#" aria-label="Kolok, accueil">kolok</a>
 
     <label class="search">
-      <svg class="i"><use href="#i-search"/></svg>
-      <input id="search" type="search" placeholder="Rechercher une ville, un titre, un avis…" autocomplete="off">
-      <kbd>/</kbd>
+      <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+      <input id="search" type="search" aria-label="Rechercher"
+             placeholder="Titre, ville, agence, note…" autocomplete="off">
+      <kbd aria-hidden="true">/</kbd>
     </label>
 
     <div class="topbar-actions">
       <button id="btnTheme" class="icon-btn" title="Changer de thème" aria-label="Changer de thème">
-        <svg class="i i-light"><use href="#i-sun"/></svg><svg class="i i-dark"><use href="#i-moon"/></svg>
+        <svg class="i i-light" aria-hidden="true"><use href="#i-sun"/></svg><svg class="i i-dark" aria-hidden="true"><use href="#i-moon"/></svg>
       </button>
-      <button id="btnAdd" class="btn btn-solid">
-        <svg class="i"><use href="#i-plus"/></svg><span>Ajouter</span>
+      <button id="btnAdd" class="btn btn-solid" aria-label="Ajouter un logement">
+        <svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span>Ajouter</span>
       </button>
-      <button id="btnMe" class="me" title="Changer d'utilisateur"></button>
+      <button id="btnMe" class="me" title="Changer d’utilisateur"></button>
     </div>
   </div>
 </header>
+
+<!-- Mode partagé configuré mais injoignable : tout ce qu'on écrirait
+     resterait sur cet appareil. Un bandeau, pas un toast qui s'efface. -->
+<div id="banner" class="banner hidden" role="alert">
+  <div class="wrap banner-in">
+    <span>Connexion au partage impossible. Vos ajouts resteraient sur cet appareil
+      et ne seraient <b>pas</b> visibles par les autres.</span>
+    <button id="btnRetry" class="btn btn-outline">Réessayer</button>
+  </div>
+</div>
 
 <!-- ═══════ Résumé + pipeline (la carte du dossier) ═══════ -->
 <div class="board-head">
   <div class="wrap">
     <p id="stats" class="summary"></p>
 
+    <!-- Ce qui a bougé depuis la dernière visite. Écrit par renderNews(),
+         masqué dès qu'il n'y a plus rien à signaler. -->
+    <div id="news" class="news hidden" role="status">
+      <span class="news-mark" aria-hidden="true"></span>
+      <span id="newsText" class="news-text"></span>
+      <button id="btnOnlyChanged" class="btn btn-outline">Voir</button>
+      <button id="btnSeenAll" class="btn btn-quiet">Tout vu</button>
+    </div>
+
     <div class="pipeline-row">
-      <div id="statusChips" class="pipeline" role="tablist" aria-label="Étapes de la recherche"></div>
+      <!-- role="group" et non "tablist" : ce sont des filtres cumulables,
+           pas des onglets, et il n'y a aucun panneau associé. -->
+      <div id="statusChips" class="pipeline" role="group" aria-label="Filtrer par étape"></div>
+
+      <div class="criteria" role="group" aria-label="Filtrer par critère">
+        <button id="btnArea" class="chip" aria-pressed="false">
+          <svg class="i" aria-hidden="true"><use href="#i-pin"/></svg><span>Sainte-Marguerite</span>
+        </button>
+        <button id="btnFurnished" class="chip" aria-pressed="false">
+          <svg class="i" aria-hidden="true"><use href="#i-bed"/></svg><span>Meublé</span>
+        </button>
+      </div>
 
       <div class="controls">
         <label class="ctrl">
-          <span>Loyer max</span>
-          <input id="maxPrice" type="number" min="0" step="50" placeholder="—" inputmode="numeric">
+          <span>Max € / pers.</span>
+          <input id="maxPrice" type="number" min="0" step="25" placeholder="550" inputmode="numeric">
         </label>
         <label class="ctrl">
           <span>Trier</span>
@@ -90,11 +122,11 @@
           </select>
         </label>
         <div class="seg" role="group" aria-label="Affichage">
-          <button id="btnBoard" class="seg-btn is-on" title="Par étape">
-            <svg class="i"><use href="#i-stack"/></svg><span>Étapes</span>
+          <button id="btnBoard" class="seg-btn is-on" title="Vue par étapes" aria-label="Vue par étapes">
+            <svg class="i" aria-hidden="true"><use href="#i-stack"/></svg><span>Étapes</span>
           </button>
-          <button id="btnCompare" class="seg-btn" title="Tableau comparatif">
-            <svg class="i"><use href="#i-table"/></svg><span>Tableau</span>
+          <button id="btnCompare" class="seg-btn" title="Tableau comparatif" aria-label="Tableau comparatif">
+            <svg class="i" aria-hidden="true"><use href="#i-table"/></svg><span>Tableau</span>
           </button>
         </div>
       </div>
@@ -107,18 +139,13 @@
   <div id="grid"></div>
   <div id="compare" class="hidden"></div>
 
-  <div id="empty" class="empty hidden">
-    <h2>Rien à cette étape</h2>
-    <p>Collez le lien d'une annonce n'importe où sur la page&nbsp;: les informations se remplissent toutes seules.</p>
-    <button class="btn btn-solid" data-open-add>
-      <svg class="i"><use href="#i-plus"/></svg><span>Ajouter un logement</span>
-    </button>
-  </div>
+  <!-- Contenu écrit par renderEmpty() : le message dépend de la raison. -->
+  <div id="empty" class="empty hidden"></div>
 </main>
 
 <!-- ═══════ Formulaire ═══════ -->
 <div id="editModal" class="modal hidden">
-  <div class="sheet">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
     <header class="sheet-head">
       <h2 id="editTitle">Nouveau logement</h2>
       <button class="icon-btn" data-close aria-label="Fermer"><svg class="i"><use href="#i-close"/></svg></button>
@@ -126,44 +153,62 @@
 
     <div class="sheet-body">
       <div class="field">
-        <label for="fUrl">Lien de l'annonce</label>
+        <label for="fUrl">Lien de l’annonce</label>
         <div class="inline">
           <input id="fUrl" type="url" placeholder="https://www.seloger.com/…" autocomplete="off">
           <button id="btnFetch" class="btn btn-outline">
-            <svg class="i"><use href="#i-wand"/></svg><span>Remplir</span>
+            <svg class="i" aria-hidden="true"><use href="#i-wand"/></svg><span>Remplir</span>
           </button>
         </div>
-        <small id="fetchMsg" class="note"></small>
+        <small id="fetchMsg" class="note" aria-live="polite"></small>
       </div>
 
       <div class="field">
         <label for="fTitle">Titre</label>
-        <input id="fTitle" type="text" placeholder="T3 lumineux, Croix-Rousse">
+        <input id="fTitle" type="text" placeholder="T4 meublé, 3 chambres, Sainte-Marguerite">
       </div>
 
       <div class="field">
         <div class="row-2">
-          <div class="field"><label for="fPrice">Loyer / mois</label>
-            <input id="fPrice" type="number" min="0" inputmode="numeric" placeholder="1200"></div>
+          <div class="field"><label for="fPrice">Loyer mensuel, charges comprises</label>
+            <input id="fPrice" type="number" min="0" inputmode="numeric" placeholder="1500"></div>
           <div class="field"><label for="fPriceMode">Ce montant est…</label>
             <select id="fPriceMode">
-              <option value="total">pour tout le logement</option>
-              <option value="person">par personne</option>
+              <option value="total">Pour les chambres qu’on prend</option>
+              <option value="person">Par personne</option>
             </select></div>
         </div>
         <small id="priceHint" class="note"></small>
       </div>
 
       <div class="row-2">
-        <div class="field"><label for="fSurface">Surface m²</label>
-          <input id="fSurface" type="number" min="0" inputmode="numeric" placeholder="75"></div>
-        <div class="field"><label for="fRooms">Chambres</label>
+        <div class="field"><label for="fSurface">Surface (m²)</label>
+          <input id="fSurface" type="number" min="0" inputmode="numeric" placeholder="70"></div>
+        <div class="field"><label for="fUpfront">Coût d’entrée (€)</label>
+          <input id="fUpfront" type="number" min="0" inputmode="numeric" placeholder="Dépôt + honoraires"></div>
+      </div>
+
+      <div class="row-2">
+        <div class="field"><label for="fRooms">Chambres libres pour nous</label>
           <input id="fRooms" type="number" min="0" inputmode="numeric" placeholder="3"></div>
+        <div class="field"><label for="fRoomsTotal">Chambres du logement</label>
+          <input id="fRoomsTotal" type="number" min="0" inputmode="numeric" placeholder="si différent"></div>
+      </div>
+
+      <div class="row-2">
+        <div class="field"><label for="fRoomsChecked">Chambres vérifiées&nbsp;?</label>
+          <select id="fRoomsChecked"></select></div>
+        <div class="field"><label for="fFurnished">Meublé&nbsp;?</label>
+          <select id="fFurnished">
+            <option value="">À vérifier</option>
+            <option value="oui">Oui — préavis 1 mois</option>
+            <option value="non">Non</option>
+          </select></div>
       </div>
 
       <div class="row-2">
         <div class="field"><label for="fCity">Ville ou quartier</label>
-          <input id="fCity" type="text" placeholder="Lyon 4e"></div>
+          <input id="fCity" type="text" placeholder="Sainte-Marguerite, Marseille 9e (13009)"></div>
         <div class="field"><label for="fStatus">Étape</label><select id="fStatus"></select></div>
       </div>
 
@@ -187,11 +232,12 @@
         <input id="fImage" type="url" placeholder="https://…jpg"></div>
 
       <div class="field"><label for="fNotes">Notes partagées</label>
-        <textarea id="fNotes" rows="3" placeholder="Charges, disponibilité, contact de l'agence…"></textarea></div>
+        <textarea id="fNotes" rows="3" placeholder="Charges, disponibilité, contact de l’agence, code d’accès…"></textarea></div>
+
+      <button id="btnDelete" class="btn btn-quiet danger hidden">Supprimer ce logement</button>
     </div>
 
     <footer class="sheet-foot">
-      <button id="btnDelete" class="btn btn-quiet danger hidden">Supprimer</button>
       <span class="grow"></span>
       <button class="btn btn-quiet" data-close>Annuler</button>
       <button id="btnSave" class="btn btn-solid">Enregistrer</button>
@@ -201,7 +247,8 @@
 
 <!-- ═══════ Fiche détaillée ═══════ -->
 <div id="detail" class="modal hidden">
-  <div class="sheet sheet-wide" id="detailCard"></div>
+  <div class="sheet sheet-wide" id="detailCard" tabindex="-1"
+       role="dialog" aria-modal="true" aria-labelledby="detailTitle"></div>
 </div>
 
 <div id="toast" class="toast" role="status"></div>

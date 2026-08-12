@@ -4,3 +4,15 @@ desktop.ini
 node_modules/
 .vscode/
 *.log
+
+# Clés et secrets — ne doivent JAMAIS partir sur GitHub.
+# Le filet large est volontaire : un ssh-keygen dont la variable
+# $USERPROFILE n'a pas été résolue avait déposé une clé privée
+# nommée « :USERPROFILE\.ssh\github » à la racine du dépôt.
+*USERPROFILE*
+id_rsa
+id_ed25519
+*.pem
+*.key
+.env
+.env.*

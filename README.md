@@ -11,10 +11,14 @@ Notre recherche de colocation, au même endroit. Fini les 200 liens perdus dans 
 - **Coller un lien** d'annonce → prix, surface, ville, photo et titre se remplissent tout seuls
 - **Suivre l'avancement** : à contacter → contacté → en attente → visité → validé / refusé
 - **Savoir qui a fait quoi** : qui a appelé, quand, quelle visite est prévue
-- **Donner son avis** : chacun met 😍 / 🙂 / 😐 / 🚫 + un commentaire, tout le monde voit tout
-- **Filtrer et trier** : par statut, prix max, meilleure note, surface
-- **Comparer** : un tableau avec tous les logements côte à côte (dont le €/m² et la part par personne)
-- **Mobile-friendly** : conçu pour être utilisé dans le métro d'une main
+- **Donner son avis** : chacun choisit entre « Coup de cœur », « Ça me va », « Bof » et « Non »,
+  ajoute un commentaire, et tout le monde voit tout
+- **Filtrer et trier** : par étape, loyer max par personne, avis du groupe, surface
+- **Comparer** : un tableau avec tous les logements côte à côte (dont le €/m², la part par
+  personne et le coût d'entrée)
+- **Coller à nos critères** : meublé ou non, chambres vérifiées ou seulement annoncées,
+  dans le secteur ou hors secteur
+- **Optimisé pour le mobile** : conçu pour être utilisé dans le métro d'une main
 
 ---
 
@@ -22,8 +26,8 @@ Notre recherche de colocation, au même endroit. Fini les 200 liens perdus dans 
 
 Pas de `npm install`, pas de build. C'est du HTML/CSS/JS.
 
-**Le plus simple — double-cliquer sur `index.html`** ne marchera pas (le navigateur bloque les
-modules JS ouverts en `file://`). Il faut un mini serveur local :
+**Attention : double-cliquer sur `index.html` ne marche pas.** Le navigateur refuse de charger
+des modules JS ouverts en `file://`. Il faut un mini serveur local :
 
 ```bash
 # Python (déjà installé sur la plupart des machines)
@@ -54,8 +58,9 @@ Le site est en ligne ~1 minute plus tard sur
 ## 3. Mode partagé temps réel
 
 ✅ **C'est déjà fait, rien à faire.** Le projet Supabase `Projet-Kolok` est créé, le schéma
-appliqué, et les clés sont dans [`js/config.js`](js/config.js). La pastille en haut à droite
-affiche `☁️ partagé` : les trois écrans se synchronisent instantanément, sans rechargement.
+appliqué, et les clés sont dans [`js/config.js`](js/config.js). La pastille au bout de la ligne
+de résumé affiche `synchronisé` : les trois écrans se mettent à jour instantanément, sans
+rechargement.
 
 ### Si vous devez un jour refaire la configuration
 
@@ -81,11 +86,11 @@ affiche `☁️ partagé` : les trois écrans se synchronisent instantanément, 
 
 | Action | Comment |
 |---|---|
-| Ajouter un logement | Bouton **Ajouter**, ou **coller un lien** n'importe où sur la page |
+| Ajouter un logement | Bouton **Ajouter**, ou **coller un lien** n'importe où sur la page (ordinateur seulement) |
 | Ouvrir la recherche | Touche `/` |
-| Changer un statut | Ouvrir la fiche → cliquer sur l'étape voulue |
+| Changer d'étape | Ouvrir la fiche → cliquer sur l'étape voulue |
 | Dire ce qu'on en pense | Ouvrir la fiche → un des 4 boutons + commentaire |
-| Comparer | Bouton **⇄ Comparer** en haut à droite |
+| Comparer | Bouton **Tableau**, dans la barre de contrôles sous le résumé |
 | Changer d'utilisateur | Pastille ronde en haut à droite |
 
 **Sur mobile** : ouvrir le site puis « Ajouter à l'écran d'accueil » — il se comporte comme une app.
@@ -99,20 +104,40 @@ Projet-Kolok/
 ├── index.html            Structure de la page (une seule page)
 ├── assets/style.css      Tout le style
 ├── js/
-│   ├── config.js         ⚙️ Les colocs, les statuts, les clés Supabase — le seul fichier à éditer
+│   ├── config.js         ⚙️ Les colocs, les étapes, nos critères, les clés Supabase
 │   ├── store.js          Données : localStorage OU Supabase, même API
 │   ├── extract.js        Lecture automatique des annonces (prix, surface, ville…)
+│   ├── changes.js        « Qu'est-ce qui a bougé depuis ma dernière visite ? »
 │   └── app.js            Rendu et interactions
-├── supabase/schema.sql   À exécuter une fois dans Supabase
+├── test/extract.test.js  Tests des fonctions d'extraction — `node --test test/`
+├── supabase/schema.sql   À exécuter dans Supabase (rejouable)
 └── .nojekyll             Dit à GitHub Pages de servir les fichiers tels quels
 ```
 
-**Pour personnaliser** (ajouter un coloc, renommer un statut, changer une couleur) :
-tout est dans `js/config.js`, c'est fait pour.
+**Pour personnaliser** (ajouter un coloc, renommer une étape, changer le quartier
+visé, changer une couleur) : tout est dans `js/config.js`, c'est fait pour.
+
+**Les tests** ne demandent rien à installer : `node --test test/`.
 
 ---
 
-## 6. Sur l'extraction automatique
+## 6. Ce qui a changé depuis la dernière visite
+
+À trois sur la même liste, on ne sait plus qui a ajouté ou modifié quoi. L'app
+s'en charge, sans rien demander :
+
+- une ligne bleue sous le résumé annonce ce qui a bougé, **et par qui** ;
+- les fiches concernées portent une pastille bleue ;
+- **tout s'efface à mesure qu'on lit** : ouvrir une fiche la marque comme vue,
+  et quand il n'en reste plus, la ligne disparaît d'elle-même ;
+- vos propres modifications ne vous sont jamais annoncées ;
+- « Voir » n'affiche que ce qui a bougé, « Tout vu » remet les compteurs à zéro.
+
+C'est local à chaque appareil : ce que Batto a lu ne concerne pas Hugoat.
+
+---
+
+## 7. Sur l'extraction automatique
 
 Un navigateur ne peut pas lire une page d'un autre site (sécurité CORS). L'app passe donc par un
 lecteur public (`r.jina.ai`, puis `allorigins` en secours) qui renvoie la page en texte, et devine
@@ -128,23 +153,24 @@ Résultats mesurés le 06/08/2026 (ça peut évoluer, les sites changent leurs p
 | PAP, Logic-Immo | ❌ bloqué (CAPTCHA Cloudflare) |
 | Facebook Marketplace | ❌ bloqué (connexion requise) |
 
-Quand ça échoue, un message orange le dit clairement et vous remplissez les 3 champs à la main
-(15 secondes). **L'app ne bloque jamais sur un échec d'extraction, et ne remplit jamais le
-formulaire avec des données douteuses** : une page anti-robot est détectée et rejetée plutôt
-qu'interprétée.
+Quand ça échoue, un message orange dit précisément pourquoi (site protégé, délai dépassé, page
+illisible, pas de réseau) et vous remplissez les quatre champs qui comptent — titre, loyer,
+surface, ville — à la main, en une trentaine de secondes. **L'app ne bloque jamais sur un échec
+d'extraction, et ne remplit jamais le formulaire avec des données douteuses** : une page
+anti-robot est détectée et rejetée plutôt qu'interprétée.
 
 ---
 
-## 7. Améliorations possibles plus tard
+## 8. Améliorations possibles plus tard
 
 Par ordre de rapport utilité / effort :
 
 1. **Carte** — les logements sur une carte Leaflet, avec le temps de trajet vers le boulot/la fac de chacun
 2. **Notification Discord/Telegram** — un webhook quand quelqu'un ajoute un logement ou le passe en « validé »
-3. **Checklist de visite** — questions à ne pas oublier (DPE, charges, dépôt, internet, voisinage), cochables sur place
+3. **Checklist de visite** — questions à ne pas oublier (DPE, charges, dépôt de garantie, Internet, voisinage), cochables sur place
 4. **Photos** — upload dans Supabase Storage plutôt qu'une seule URL
-5. **Budget** — un curseur « on veut max X € par personne » qui grise tout ce qui dépasse
-6. **Historique** — voir qui a changé quoi et quand
+5. **Surface de sa chambre** — c'est le vrai chiffre qui décide en coloc, et il n'existe aujourd'hui que dans le texte des notes
+6. **Prix par chambre** — à La Rouvière les trois chambres coûtent 560, 620 et 580 € : l'app affiche une moyenne de 587 € que personne ne paiera
 7. **Import en masse** — coller 10 liens d'un coup depuis la conversation de groupe
 
 ---
@@ -154,8 +180,9 @@ Par ordre de rapport utilité / effort :
 | Symptôme | Cause | Solution |
 |---|---|---|
 | Page blanche en ouvrant `index.html` | Ouvert en `file://` | Lancer `python -m http.server 8000` |
-| Les autres ne voient pas mes logements | La pastille affiche `💾 local` | Vérifier que `js/config.js` contient bien les 2 clés |
+| Les autres ne voient pas mes logements | La pastille affiche `local` | Vérifier que `js/config.js` contient bien les 2 clés |
+| Bandeau rouge « Connexion impossible » | Supabase injoignable | Ne rien ajouter tant qu'il est là : l'écriture resterait sur cet appareil. Bouton « Réessayer » |
 | Tout s'affiche mais rien ne se synchronise | Clé `anon` au lieu de `publishable` | Voir l'avertissement du § 3 |
-| « Page illisible automatiquement » | Le site bloque les robots | Remplir les champs à la main |
+| « Ce site bloque la lecture automatique » | CAPTCHA ou mur anti-robot | Remplir les champs à la main |
 | Rien ne s'affiche après le push | Pages pas encore déployé | Attendre 1-2 min, puis recharger avec `Ctrl+F5` |
 | Après un push, l'ancienne version persiste | GitHub Pages met en cache les fichiers JS 10 min (`max-age=600`) | `Ctrl+F5`, ou attendre — vérifié : ça arrive vraiment |
