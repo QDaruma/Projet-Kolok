@@ -4,6 +4,7 @@
 //    • MODE PARTAGÉ : Supabase + temps réel (dès que config.js est rempli)
 // ─────────────────────────────────────────────────────────────
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { urlKey } from './extract.js';
 
 const LS_KEY = 'kolok.data.v1';
 const uid = () => (crypto.randomUUID ? crypto.randomUUID()
@@ -170,11 +171,12 @@ export const Store = {
 
     // Le même logement se retrouvait deux fois dans la liste, ajouté par
     // deux colocataires depuis le même lien — avec des avis contradictoires
-    // sur ce qui était en réalité un seul bien. normalizeUrl produisait déjà
-    // la clé de comparaison, plus personne ne s'en servait.
-    if (row.url) {
-      const dup = this.listings.find(x => x.url === row.url && x.id !== row.id);
-      if (dup) throw new Error(`Déjà dans la liste, sous le titre « ${dup.title} ».`);
+    // sur ce qui était en réalité un seul bien.
+    const dup = this.findByUrl(row.url, row.id);
+    if (dup) {
+      const err = new Error(`Déjà dans la liste, sous le titre « ${dup.title} ».`);
+      err.duplicateOf = dup;      // l'interface s'en sert pour y renvoyer
+      throw err;
     }
 
     if (this.sb) {
@@ -264,6 +266,17 @@ export const Store = {
   },
 
   // ── Lectures dérivées ─────────────────────────────────────
+  /**
+   * La fiche qui porte déjà ce lien, ou null. Comparaison sur domaine +
+   * chemin : un même logement copié depuis une liste de résultats arrive
+   * avec des paramètres différents à chaque fois.
+   */
+  findByUrl(url, exceptId = null) {
+    const k = urlKey(url);
+    if (!k) return null;
+    return this.listings.find(x => x.id !== exceptId && urlKey(x.url) === k) || null;
+  },
+
   getOpinion(listingId, userId) {
     return this.opinions.find(o => o.listing_id === listingId && o.user_id === userId) || null;
   },

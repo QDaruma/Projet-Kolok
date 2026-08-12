@@ -119,3 +119,31 @@ test('parseHtml ne se noie pas dans le script et le style', () => {
   assert.equal(r.price, 700);
   assert.equal(r.surface, 35);
 });
+
+// ── urlKey : reconnaître un même lien copié de deux façons ───
+import { urlKey } from '../js/extract.js';
+
+test('urlKey ignore les paramètres ajoutés par les listes de résultats', () => {
+  const a = 'https://www.seloger.com/annonces/locations/appartement/x/123.htm';
+  const b = a + '?serp_view=list&search=distributionTypes%3DRent#ln=results';
+  assert.equal(urlKey(a), urlKey(b));
+});
+
+test('urlKey ignore le www et la barre finale', () => {
+  assert.equal(urlKey('https://www.bienici.com/annonce/ag1-42/'),
+               urlKey('https://bienici.com/annonce/ag1-42'));
+});
+
+test('urlKey distingue deux annonces différentes du même site', () => {
+  assert.notEqual(urlKey('https://www.seloger.com/annonce/123'),
+                  urlKey('https://www.seloger.com/annonce/456'));
+});
+
+test('urlKey tolère une saisie sans schéma', () => {
+  assert.equal(urlKey('seloger.com/annonce/7'), urlKey('https://www.seloger.com/annonce/7'));
+});
+
+test('urlKey renvoie une chaîne vide sur une saisie vide', () => {
+  assert.equal(urlKey(''), '');
+  assert.equal(urlKey(null), '');
+});

@@ -456,6 +456,14 @@ main.wrap { padding-top: 26px; padding-bottom: 72px; }
   width: 9px; height: 9px; border-radius: 50%; background: var(--focus);
   box-shadow: 0 0 0 3px var(--surface); }
 
+/* ── Lien déjà dans la liste ─────────────────────────────── */
+.dup { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 9px 11px; border-radius: var(--r-sm); font-size: 12.5px;
+  border: 1px solid color-mix(in srgb, #A8761C 40%, transparent);
+  background: color-mix(in srgb, #A8761C 9%, var(--surface)); }
+.dup-txt { flex: 1; min-width: 170px; color: var(--ink); }
+.dup .btn { padding: 5px 10px; font-size: 12.5px; white-space: nowrap; }
+
 /* ── Bandeau d'alerte ────────────────────────────────────── */
 .banner { background: color-mix(in srgb, #C0483F 12%, var(--surface));
   border-bottom: 1px solid color-mix(in srgb, #C0483F 35%, transparent); }

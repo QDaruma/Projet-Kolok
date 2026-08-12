@@ -161,6 +161,13 @@
           </button>
         </div>
         <small id="fetchMsg" class="note" aria-live="polite"></small>
+
+        <!-- Doublon repéré dès la saisie du lien, avant de remplir le reste.
+             Écrit par checkDuplicate(). -->
+        <div id="dupWarn" class="dup hidden" role="alert">
+          <span class="dup-txt"></span>
+          <button type="button" id="btnSeeDup" class="btn btn-outline">Voir la fiche</button>
+        </div>
       </div>
 
       <div class="field">

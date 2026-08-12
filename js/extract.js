@@ -210,6 +210,26 @@ function cityFromUrl(u) {
 }
 const cap = s => s.replace(/\b\w/g, c => c.toUpperCase());
 
+/**
+ * Clé de comparaison entre deux liens. On ne garde que le domaine et le
+ * chemin : les portails ajoutent au lien copié depuis une liste de
+ * résultats une ribambelle de paramètres (`?serp_view=…&search=…`) qui
+ * changent d'une copie à l'autre pour une seule et même annonce.
+ * Le « www. » et la barre finale sautent aussi.
+ *
+ * Volontairement plus large que l'égalité stricte : mieux vaut prévenir
+ * d'un doublon possible que de laisser entrer deux fois le même logement.
+ */
+export function urlKey(u) {
+  const s = normalizeUrl(u);
+  if (!s) return '';
+  try {
+    const { host, pathname } = new URL(s);
+    return host.replace(/^www\./i, '').toLowerCase()
+         + pathname.replace(/\/+$/, '').toLowerCase();
+  } catch { return s.toLowerCase(); }
+}
+
 export function normalizeUrl(u) {
   let s = (u || '').trim();
   if (!s) return '';

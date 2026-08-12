@@ -182,6 +182,14 @@ function wireEvents() {
       $('#fStatus').value = 'contacte';
     }
   });
+  // Le doublon est signalé dès que le lien est saisi ou collé : inutile de
+  // laisser remplir dix champs pour refuser à l'enregistrement.
+  $('#fUrl').addEventListener('input', checkDuplicate);
+  $('#fUrl').addEventListener('paste', () => setTimeout(checkDuplicate, 0));
+  $('#btnSeeDup').addEventListener('click', () => {
+    const id = $('#dupWarn').dataset.id;
+    if (id) { closeModals(); openDetail(id); }
+  });
   $('#fPrice').addEventListener('input', showPriceHint);
   $('#fPriceMode').addEventListener('change', showPriceHint);
   $('#fUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doFetch(); } });
@@ -207,7 +215,16 @@ function wireEvents() {
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
     if (anyModalOpen()) return;          // sinon le formulaire s'ouvre derrière la fiche
     const txt = (e.clipboardData?.getData('text') || '').trim();
-    if (/^https?:\/\//i.test(txt)) { openEditor(null); $('#fUrl').value = txt; doFetch(); }
+    if (!/^https?:\/\//i.test(txt)) return;
+    // Lien déjà connu : on n'ouvre pas un formulaire pour rien, on emmène
+    // directement sur la fiche existante.
+    const dup = Store.findByUrl(txt);
+    if (dup) {
+      toast(`Ce lien est déjà dans la liste : « ${dup.title} ».`, 5000);
+      openDetail(dup.id);
+      return;
+    }
+    openEditor(null); $('#fUrl').value = txt; checkDuplicate(); doFetch();
   });
 }
 
@@ -908,6 +925,7 @@ function openEditor(id) {
   syncLessorField();
   $('#fPriceMode').value = 'total';
   showPriceHint();
+  checkDuplicate();          // remet aussi l'avertissement et le bouton à zéro
   $('#editModal').classList.remove('hidden');
   lockScroll(true);
   setTimeout(() => $(r ? '#fTitle' : '#fUrl').focus(), 50);
@@ -921,6 +939,33 @@ function openEditor(id) {
 /** Le nom n'a de sens que pour une agence. */
 function syncLessorField() {
   $('#lessorNameField').classList.toggle('hidden', $('#fLessorType').value !== 'agence');
+}
+
+/**
+ * Signale que ce lien est déjà dans la liste, et propose d'aller voir la
+ * fiche existante plutôt que d'en créer une seconde. Renvoie la fiche
+ * trouvée, ou null.
+ */
+function checkDuplicate() {
+  const box = $('#dupWarn');
+  const dup = Store.findByUrl($('#fUrl').value, state.editingId);
+  if (!dup) {
+    box.classList.add('hidden'); box.dataset.id = '';
+    $('#btnSave').disabled = false;
+    return null;
+  }
+  const st = statusById(dup.status);
+  const who = userById(dup.added_by)?.name;
+  box.dataset.id = dup.id;
+  box.querySelector('.dup-txt').innerHTML =
+    `Ce lien est <b>déjà dans la liste</b> : « ${esc(dup.title)} »`
+    + (who ? `, ajouté par ${esc(who)}` : '')
+    + `, à l’étape « ${esc(st.label)} ».`;
+  box.classList.remove('hidden');
+  // On bloque l'enregistrement plutôt que de laisser le store le refuser
+  // après coup : le bouton grisé dit tout de suite qu'il n'y a rien à faire.
+  $('#btnSave').disabled = true;
+  return dup;
 }
 
 function showPriceHint() {
@@ -955,6 +1000,9 @@ async function doFetch() {
     const d = await extractFromUrl(url);
     if (mine !== fetchToken) return;          // le formulaire a changé entre-temps
     $('#fUrl').value = d.url || normalizeUrl(url);
+    // Le lien normalisé peut correspondre à une fiche que la forme brute
+    // ne recoupait pas.
+    if (checkDuplicate()) { msg.textContent = ''; msg.className = 'note'; return; }
     const set = (sel, v) => { if (v != null && v !== '' && !$(sel).value) $(sel).value = v; };
     set('#fTitle', d.title); set('#fPrice', d.price); set('#fSurface', d.surface);
     set('#fRooms', d.rooms); set('#fCity', d.city);  set('#fImage', d.image_url);
@@ -1035,8 +1083,17 @@ async function saveFromForm() {
     toast(isNew ? 'Logement ajouté' : 'Modifications enregistrées');
   } catch (e) {
     console.error(e);
-    toast(friendlyError(e), 6000);
-  } finally { btn.disabled = false; btn.textContent = label; }
+    // Filet de sécurité : un colocataire a pu ajouter le même lien pendant
+    // qu'on remplissait le formulaire. On renvoie sur sa fiche.
+    if (e.duplicateOf) {
+      checkDuplicate();
+      toast(`Ce lien vient d’être ajouté par quelqu’un d’autre : « ${e.duplicateOf.title} ».`, 6000);
+      closeModals();
+      openDetail(e.duplicateOf.id);
+    } else {
+      toast(friendlyError(e), 6000);
+    }
+  } finally { btn.textContent = label; btn.disabled = !!$('#dupWarn').dataset.id; }
 }
 
 async function deleteCurrent() {
